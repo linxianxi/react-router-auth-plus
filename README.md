@@ -16,6 +16,8 @@ yarn add react-router-auth-plus
 
 ## Usage
 
+if user auth is `["auth1"]`, home router auth configure `["auth1", "auth2"]`, will be judged as having permission.
+
 **How to use(two ways)**
 
 ```jsx
@@ -46,7 +48,7 @@ import {
   useAuthRouters,
 } from "react-router-auth-plus";
 import useSWR from "swr";
-import { Navigate, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Routes } from "react-router-dom";
 
 const routers: AuthRouterObject[] = [
   { path: "/", element: <Login /> },
@@ -79,8 +81,6 @@ function App() {
     revalidateOnFocus: false,
   });
 
-  const navigate = useNavigate();
-
   return useAuthRouters({
     auth: auth || [],
     routers,
@@ -90,27 +90,27 @@ function App() {
 
   // or you can use jsx to configure
 
-  // return useAuthRouters({
-  //   auth: auth || [],
-  //   noAuthElement: (router) => <Navigate to="/login" replace />,
-  //   render: (element) => (auth ? element : <Loading />),
-  //   routers: createAuthRoutesFromChildren(
-  //     <Routes>
-  //       <AuthRoute path="/" element={<Login />} />
-  //       <AuthRoute path="/login" element={<Login />} />
-  //       <AuthRoute element={<Layout />}>
-  //         <AuthRoute path="/home" element={<Home />} auth={["admin"]} />
-  //         <AuthRoute path="/setting" element={<Setting />} />
-  //         <AuthRoute
-  //           path="/application"
-  //           element={<Application />}
-  //           auth={["application"]}
-  //         />
-  //       </AuthRoute>
-  //       <AuthRoute path="*" element={<NotFound />} />
-  //     </Routes>
-  //   ),
-  // });
+  return useAuthRouters({
+    auth: auth || [],
+    noAuthElement: (router) => <Navigate to="/login" replace />,
+    render: (element) => (auth ? element : <Loading />),
+    routers: createAuthRoutesFromChildren(
+      <Routes>
+        <AuthRoute path="/" element={<Login />} />
+        <AuthRoute path="/login" element={<Login />} />
+        <AuthRoute element={<Layout />}>
+          <AuthRoute path="/home" element={<Home />} auth={["admin"]} />
+          <AuthRoute path="/setting" element={<Setting />} />
+          <AuthRoute
+            path="/application"
+            element={<Application />}
+            auth={["application"]}
+          />
+        </AuthRoute>
+        <AuthRoute path="*" element={<NotFound />} />
+      </Routes>
+    ),
+  });
 }
 ```
 
