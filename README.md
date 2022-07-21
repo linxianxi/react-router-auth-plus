@@ -88,7 +88,7 @@ function App() {
     render: (element) => (auth ? element : <Loading />),
   });
 
-  // or you can use jx to configure
+  // or you can use jsx to configure
 
   // return useAuthRouters({
   //   auth: auth || [],
