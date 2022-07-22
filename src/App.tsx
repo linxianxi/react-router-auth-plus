@@ -16,7 +16,7 @@ import useSWR from "swr";
 import { Navigate, Routes } from "react-router-dom";
 
 const routers: AuthRouterObject[] = [
-  { path: "/", element: <Login /> },
+  { path: "/", element: <Navigate to="/home" replace /> },
   { path: "/login", element: <Login /> },
   {
     element: <Layout />,
@@ -59,7 +59,7 @@ function App() {
   //   render: (element) => (auth ? element: <Loading />),
   //   routers: createAuthRoutesFromChildren(
   //     <Routes>
-  //       <AuthRoute path="/" element={<Login />} />
+  //       <AuthRoute path="/" element={<Navigate to="home" replace />} />
   //       <AuthRoute path="/login" element={<Login />} />
   //       <AuthRoute element={<Layout />}>
   //         <AuthRoute path="/home" element={<Home />} auth={["admin"]} />
