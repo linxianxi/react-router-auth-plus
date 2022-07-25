@@ -7,6 +7,10 @@ export interface AuthRouterObject extends RouteObject {
   children?: AuthRouterObject[];
 }
 
+export interface AuthElementProps {
+  routers?: AuthRouterObject[];
+}
+
 export const useAuthRouters = ({
   routers,
   noAuthElement,
@@ -55,6 +59,11 @@ export const useAuthRouters = ({
             }
           }
         }
+      }
+      if (React.isValidElement(router.element) && router.children) {
+        router.element = React.cloneElement(router.element, {
+          routers: router.children,
+        });
       }
       if (router.children) {
         router.children = getRouters(router.children);
