@@ -1,7 +1,7 @@
 import React from "react";
 import { RouteObject, useRoutes } from "react-router-dom";
 import { AuthLayout, NoAuthElement } from "./components";
-import cloneDeep from "lodash.clonedeep";
+import cloneDeep from "lodash/cloneDeep";
 
 export interface AuthRouterObject extends RouteObject {
   auth?: string | string[];

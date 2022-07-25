@@ -1,4 +1,4 @@
-import cloneDeep from "lodash.clonedeep";
+import cloneDeep from "lodash/cloneDeep";
 import { AuthRouterObject } from "./hooks";
 
 export function getAuthMenus<T extends AuthRouterObject>(
