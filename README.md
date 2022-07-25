@@ -119,11 +119,15 @@ function App() {
 **useAuthRouters**
 | Property | Description | Type | Required |
 | ----------- | ----------------------------- | ------------------------------------------------------ | -------- |
-| auth | permissions of the current user | string \| string[] | true |
+| auth | permissions of the current user | string[] | true |
 | noAuthElement | the element that is displayed when has no permissions | (router: AuthRouterObject) => ReactNode | false |
 | render | custom render page | (element: ReactElement \| null) => ReactElement \| null | false |
 | routers | all routers | AuthRouterObject[] | true |
 
 **createAuthRoutesFromChildren** (children: ReactNode) => AuthRouterObject[]
-<br />
+
 create routers from ReactNode
+
+**getAuthMenus** \<T extends AuthRouterObject>(auth: string[],menuRouters: T[]) => T[]
+
+get the menu with permissions
