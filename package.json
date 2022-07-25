@@ -1,6 +1,6 @@
 {
   "name": "react-router-auth-plus",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Easy to use permission management based on react-router v6",
   "keywords": [
     "react",
