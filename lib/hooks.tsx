@@ -7,10 +7,6 @@ export interface AuthRouterObject extends RouteObject {
   children?: AuthRouterObject[];
 }
 
-export interface AuthElementProps {
-  routers?: AuthRouterObject[];
-}
-
 export const useAuthRouters = ({
   routers,
   noAuthElement,
