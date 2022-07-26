@@ -32,23 +32,20 @@ const routers = [{ path: "/home", element: <Home />, auth: ["admin"] }];
 
 **Configure the routes**
 
-```tsx
-// App.tsx
+```jsx
+// routers.tsx
+
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Layout from "./layout/Layout";
 import Setting from "./pages/Setting";
 import Application from "./pages/Application";
-import Loading from "./components/Loading";
+import { Navigate } from "react-router-dom";
 import {
-  AuthRoute,
-  AuthRouterObject,
   createAuthRoutesFromChildren,
-  useAuthRouters,
+  AuthRoute,
 } from "react-router-auth-plus";
-import useSWR from "swr";
-import { Navigate, Routes } from "react-router-dom";
 
 const routers: AuthRouterObject[] = [
   { path: "/", element: <Navigate to="/home" replace /> },
@@ -68,6 +65,42 @@ const routers: AuthRouterObject[] = [
   { path: "*", element: <NotFound /> },
 ];
 
+// or use jsx
+const routers: AuthRouterObject[] = createAuthRoutesFromChildren(
+  <Routes>
+    <AuthRoute path="/" element={<Navigate to="/home" replace />} />
+    <AuthRoute path="/login" element={<Login />} />
+    <AuthRoute element={<Layout />}>
+      <AuthRoute path="/home" element={<Home />} auth={["admin"]} />
+      <AuthRoute path="/setting" element={<Setting />} />
+      <AuthRoute
+        path="/application"
+        element={<Application />}
+        auth={["application"]}
+      />
+    </AuthRoute>
+    <AuthRoute path="*" element={<NotFound />} />
+  </Routes>
+);
+```
+
+**In App.tsx**
+
+```jsx
+// App.tsx
+
+import Loading from "./components/Loading";
+import NotAuth from "./components/NotAuth";
+import {
+  AuthRoute,
+  AuthRouterObject,
+  createAuthRoutesFromChildren,
+  useAuthRouters,
+} from "react-router-auth-plus";
+import useSWR from "swr";
+import { Routes } from "react-router-dom";
+import routers from "./routers";
+
 const fetcher = async (url: string): Promise<string[]> =>
   await new Promise((resolve) => {
     setTimeout(() => {
@@ -77,40 +110,34 @@ const fetcher = async (url: string): Promise<string[]> =>
 
 function App() {
   // use swr, react-query or others
-  const { data: auth } = useSWR("/api/user", fetcher, {
+  const { data: auth, isValidating } = useSWR("/api/user", fetcher, {
     revalidateOnFocus: false,
   });
 
   return useAuthRouters({
     auth: auth || [],
     routers,
-    noAuthElement: (router) => <Navigate to="/login" replace />,
-    render: (element) => (auth ? element : <Loading />),
+    noAuthElement: (router) => <NotAuth />,
+    render: (element) => (isValidating ? element : <Loading />),
   });
+}
+```
 
-  // or you can use jsx to configure
+**Dynamic Menus**
 
-  return useAuthRouters({
-    auth: auth || [],
-    noAuthElement: (router) => <Navigate to="/login" replace />,
-    render: (element) => (auth ? element : <Loading />),
-    routers: createAuthRoutesFromChildren(
-      <Routes>
-        <AuthRoute path="/" element={<Navigate to="home" replace />} />
-        <AuthRoute path="/login" element={<Login />} />
-        <AuthRoute element={<Layout />}>
-          <AuthRoute path="/home" element={<Home />} auth={["admin"]} />
-          <AuthRoute path="/setting" element={<Setting />} />
-          <AuthRoute
-            path="/application"
-            element={<Application />}
-            auth={["application"]}
-          />
-        </AuthRoute>
-        <AuthRoute path="*" element={<NotFound />} />
-      </Routes>
-    ),
-  });
+`react-router-auth-plus` automatically passes children to Layout. You do not need to pass children to Layout in the route configuration. If you are using typescript, set the routers type to optional. UseAuthMenus filters out routes that do not have permission.
+
+```jsx
+import { useAuthMenus, AuthRouterObject } from "react-router-auth-plus";
+
+interface LayoutProps {
+  routers?: AuthRouterObject;
+}
+
+const Layout:FC<LayoutProps> = ({ routers }) => {
+   const menus = useAuthMenus(routers);
+
+   ...
 }
 ```
 
@@ -126,7 +153,7 @@ function App() {
 
 **createAuthRoutesFromChildren** (children: ReactNode) => AuthRouterObject[]
 
-create routers from ReactNode
+create routers from jsx style routers
 
 **useAuthMenus** \<T extends AuthRouterObject>(menuRouters: T[]) => T[]
 
