@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useContext } from "react";
 import { RouteObject, useRoutes } from "react-router-dom";
 import { AuthLayout, NoAuthElement } from "./components";
 import cloneDeep from "lodash/cloneDeep";
+import { AuthContext } from "./context";
 
 export interface AuthRouterObject extends RouteObject {
   auth?: string | string[];
@@ -58,12 +59,50 @@ export const useAuthRouters = ({
     return result;
   };
 
-  return useRoutes(
-    getRouters([
-      {
-        element: <AuthLayout render={render} />,
-        children: routers,
-      },
-    ])
+  return (
+    <AuthContext.Provider value={auth}>
+      {useRoutes(
+        getRouters([
+          {
+            element: <AuthLayout render={render} />,
+            children: routers,
+          },
+        ])
+      )}
+    </AuthContext.Provider>
   );
 };
+
+export function useAuthMenus<T extends AuthRouterObject>(
+  menuRouters: T[]
+): T[] {
+  const auth = useContext(AuthContext);
+
+  function getMenus(items: T[]) {
+    const result: T[] = [];
+
+    cloneDeep(items).forEach((i) => {
+      if (!i.auth || (Array.isArray(i.auth) && !i.auth.length)) {
+        result.push(i);
+      } else {
+        if (typeof i.auth === "string") {
+          if (auth.includes(i.auth)) {
+            result.push(i);
+          }
+          return false;
+        } else {
+          if (auth.some((item) => i.auth?.includes(item))) {
+            result.push(i);
+          }
+        }
+      }
+      if (i.children?.length) {
+        i.children = getMenus(i.children as T[]);
+      }
+    });
+
+    return result;
+  }
+
+  return getMenus(menuRouters);
+}
