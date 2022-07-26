@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { RouteObject, useRoutes } from "react-router-dom";
 import { AuthLayout, NoAuthElement } from "./components";
 import cloneDeep from "lodash/cloneDeep";
+import cloneDeepWith from "lodash/cloneDeepWith";
 import { AuthContext } from "./context";
 
 export interface AuthRouterObject extends RouteObject {
@@ -22,7 +23,11 @@ export const useAuthRouters = ({
 }) => {
   const getRouters = (routers: AuthRouterObject[]) => {
     const result: AuthRouterObject[] = [];
-    cloneDeep(routers).forEach((router) => {
+    cloneDeepWith(routers, (value) => {
+      if (React.isValidElement(value)) {
+        return React.cloneElement(value);
+      }
+    }).forEach((router: AuthRouterObject) => {
       if (router.auth) {
         const setNoAuthElement = () => {
           router.element = (
