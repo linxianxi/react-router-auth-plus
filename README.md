@@ -128,6 +128,6 @@ function App() {
 
 create routers from ReactNode
 
-**getAuthMenus** \<T extends AuthRouterObject>(auth: string[],menuRouters: T[]) => T[]
+**useAuthMenus** \<T extends AuthRouterObject>(menuRouters: T[]) => T[]
 
 get the menu with permissions
