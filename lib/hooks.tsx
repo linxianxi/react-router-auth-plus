@@ -94,7 +94,6 @@ export function useAuthMenus<T extends AuthRouterObject>(
           if (auth.includes(i.auth)) {
             result.push(i);
           }
-          return false;
         } else {
           if (auth.some((item) => i.auth?.includes(item))) {
             result.push(i);
