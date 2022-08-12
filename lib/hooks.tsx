@@ -1,8 +1,6 @@
 import React, { useContext } from "react";
 import { RouteObject, useRoutes } from "react-router-dom";
 import { AuthLayout, NoAuthElement } from "./components";
-import cloneDeep from "lodash/cloneDeep";
-import cloneDeepWith from "lodash/cloneDeepWith";
 import { AuthContext } from "./context";
 
 export interface AuthRouterObject extends RouteObject {
@@ -21,48 +19,51 @@ export const useAuthRouters = ({
   auth: string[];
   render?: (element: React.ReactElement | null) => React.ReactElement | null;
 }) => {
-  const getRouters = (routers: AuthRouterObject[]) => {
-    const result: AuthRouterObject[] = [];
-    cloneDeepWith(routers, (value) => {
-      if (React.isValidElement(value)) {
-        return React.cloneElement(value);
-      }
-    }).forEach((router: AuthRouterObject) => {
+  function getRouters(routers: AuthRouterObject[]) {
+    return routers.reduce((total: AuthRouterObject[], router) => {
+      let hasAuth = true;
       if (router.auth) {
-        const setNoAuthElement = () => {
-          router.element = (
-            <NoAuthElement
-              redirectElement={
-                noAuthElement ? () => noAuthElement(router) : undefined
-              }
-            >
-              {router.element}
-            </NoAuthElement>
-          );
-        };
         if (typeof router.auth === "string") {
           if (!auth.includes(router.auth)) {
-            setNoAuthElement();
+            hasAuth = false;
           }
         } else if (Array.isArray(router.auth) && router.auth.length > 0) {
           if (!router.auth.some((i) => auth.includes(i))) {
-            setNoAuthElement();
+            hasAuth = false;
           }
         }
       }
-      if (React.isValidElement(router.element) && router.children) {
-        router.element = React.cloneElement(router.element, {
-          routers: router.children,
-          ...router.element.props,
-        });
-      }
-      if (router.children) {
-        router.children = getRouters(router.children);
-      }
-      result.push(router);
-    });
-    return result;
-  };
+      total.push({
+        ...router,
+        ...(!hasAuth
+          ? {
+              element: (
+                <NoAuthElement
+                  redirectElement={
+                    noAuthElement ? () => noAuthElement(router) : undefined
+                  }
+                >
+                  {router.element}
+                </NoAuthElement>
+              ),
+            }
+          : React.isValidElement(router.element) && router.children
+          ? {
+              element: React.cloneElement(router.element, {
+                routers: router.children,
+                ...router.element.props,
+              }),
+            }
+          : {}),
+        ...(router.children?.length
+          ? {
+              children: getRouters(router.children),
+            }
+          : {}),
+      });
+      return total;
+    }, []);
+  }
 
   return (
     <AuthContext.Provider value={auth}>
@@ -84,28 +85,30 @@ export function useAuthMenus<T extends AuthRouterObject>(
   const auth = useContext(AuthContext);
 
   function getMenus(items: T[]) {
-    const result: T[] = [];
-
-    cloneDeep(items).forEach((i) => {
+    return items.reduce((total: T[], i) => {
+      let result;
       if (!i.auth || (Array.isArray(i.auth) && !i.auth.length)) {
-        result.push(i);
+        result = i;
       } else {
         if (typeof i.auth === "string") {
           if (auth.includes(i.auth)) {
-            result.push(i);
+            result = i;
           }
         } else {
           if (auth.some((item) => i.auth?.includes(item))) {
-            result.push(i);
+            result = i;
           }
         }
       }
-      if (i.children?.length) {
-        i.children = getMenus(i.children as T[]);
+      if (result) {
+        total.push(
+          i.children?.length
+            ? { ...result, children: getMenus(i.children as T[]) }
+            : result
+        );
       }
-    });
-
-    return result;
+      return total;
+    }, []);
   }
 
   return getMenus(menuRouters);
