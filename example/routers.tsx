@@ -19,6 +19,7 @@ export const routers: MetaAuthRouteObject[] = [
   {
     path: "/",
     element: <Layout />,
+    genAuthRoutersProp: true,
     children: [
       {
         element: <Home />,

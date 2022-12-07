@@ -18,43 +18,46 @@ yarn add react-router-auth-plus
 
 if user auth is `["auth1"]`, home router auth configure `["auth1", "auth2"]`, will be judged as having permission.
 
-**How to use(two ways)**
+**How to use**
 
 ```jsx
-// in array
 // auth: string | string[]
 const routers = [{ path: "/home", element: <Home />, auth: ["admin"] }];
-
-// in jsx
-// auth: string | string[]
-<AuthRoute path="/home" element={<Home />} auth={["admin"]} />;
 ```
 
 **Configure the routes**
 
 ```jsx
 // routers.tsx
-
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import NotFound from "./pages/NotFound";
-import Layout from "./layout/Layout";
-import Setting from "./pages/Setting";
-import Application from "./pages/Application";
+import { lazy } from "react";
 import { Navigate } from "react-router-dom";
-import {
-  createAuthRoutesFromChildren,
-  AuthRoute,
-} from "react-router-auth-plus";
+import { AuthRouteObject } from "react-router-auth-plus";
 
-const routers: AuthRouterObject[] = [
-  { path: "/", element: <Navigate to="/home" replace /> },
-  { path: "/login", element: <Login /> },
+const Layout = lazy(() => import("./layout/Layout"));
+const Application = lazy(() => import("./pages/Application"));
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const NotFound = lazy(() => import("./pages/404"));
+const Setting = lazy(() => import("./pages/Setting"));
+
+export const routers: AuthRouteObject[] = [
   {
+    path: "/",
     element: <Layout />,
+    // it will pass th routers prop to Layout
+    // genRoutersProp: true,
+    // it will pass the authRouters prop to Layout, you can use it to generate menus
+    genAuthRoutersProp: true,
     children: [
-      { path: "/home", element: <Home />, auth: ["admin"] },
-      { path: "/setting", element: <Setting /> },
+      {
+        element: <Home />,
+        auth: ["admin"],
+        index: true,
+      },
+      {
+        path: "/setting",
+        element: <Setting />,
+      },
       {
         path: "/application",
         element: <Application />,
@@ -62,44 +65,25 @@ const routers: AuthRouterObject[] = [
       },
     ],
   },
+  {
+    path: "/login",
+    element: <Login />,
+  },
   { path: "*", element: <NotFound /> },
 ];
-
-// or use jsx
-const routers: AuthRouterObject[] = createAuthRoutesFromChildren(
-  <Routes>
-    <AuthRoute path="/" element={<Navigate to="/home" replace />} />
-    <AuthRoute path="/login" element={<Login />} />
-    <AuthRoute element={<Layout />}>
-      <AuthRoute path="/home" element={<Home />} auth={["admin"]} />
-      <AuthRoute path="/setting" element={<Setting />} />
-      <AuthRoute
-        path="/application"
-        element={<Application />}
-        auth={["application"]}
-      />
-    </AuthRoute>
-    <AuthRoute path="*" element={<NotFound />} />
-  </Routes>
-);
 ```
 
 **In App.tsx**
 
 ```jsx
 // App.tsx
-
+import NotAuth from "./pages/403";
 import Loading from "./components/Loading";
-import NotAuth from "./components/NotAuth";
-import {
-  AuthRoute,
-  AuthRouterObject,
-  createAuthRoutesFromChildren,
-  useAuthRouters,
-} from "react-router-auth-plus";
+import { getAuthRouters } from "react-router-auth-plus";
 import useSWR from "swr";
-import { Routes } from "react-router-dom";
-import routers from "./routers";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { routers } from "./routers";
+import { Suspense } from "react";
 
 const fetcher = async (url: string): Promise<string[]> =>
   await new Promise((resolve) => {
@@ -110,32 +94,46 @@ const fetcher = async (url: string): Promise<string[]> =>
 
 function App() {
   // use swr, react-query or others
-  const { data: auth, isValidating } = useSWR("/api/user", fetcher, {
-    revalidateOnFocus: false,
-  });
+  const { data: auth } = useSWR("/api/user", fetcher);
 
-  return useAuthRouters({
-    auth: auth || [],
+  const _routers = getAuthRouters({
     routers,
     noAuthElement: (router) => <NotAuth />,
-    render: (element) => (isValidating ? element : <Loading />),
+    render: (element) => (auth ? element : <Loading />),
+    auth: auth || [],
   });
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <RouterProvider
+        router={createBrowserRouter(_routers)}
+        // route loader loading
+        fallbackElement={<Loading />}
+      />
+    </Suspense>
+  );
 }
+
+export default App;
 ```
 
 **Dynamic Menus**
 
-`react-router-auth-plus` automatically passes children to Layout. You do not need to pass children to Layout in the route configuration. If you are using typescript, set the routers type to optional. UseAuthMenus filters out routes that do not have permission.
+If you set `genRoutersProp` and `genAuthRoutersProp` in router config, `react-router-auth-plus` automatically passes `routers` and `authRouters` to props.
 
 ```jsx
-import { useAuthMenus, AuthRouterObject } from "react-router-auth-plus";
+import { AuthRouteObject } from "react-router-auth-plus";
 
 interface LayoutProps {
-  routers?: AuthRouterObject;
+  // default routers
+  routers?: AuthRouteObject[];
+  // menu routers
+  authRouters?: AuthRouteObject[];
 }
 
-const Layout:FC<LayoutProps> = ({ routers }) => {
-   const menus = useAuthMenus(routers);
+const Layout:FC<LayoutProps> = ({ routers, authRouters }) => {
+   // you can use authRouters to generate your menus
+   console.log("menuRouters", authRouters);
 
    ...
 }
@@ -143,18 +141,10 @@ const Layout:FC<LayoutProps> = ({ routers }) => {
 
 ## API
 
-**useAuthRouters**
+**getAuthRouters**
 | Property | Description | Type | Required |
 | ----------- | ----------------------------- | ------------------------------------------------------ | -------- |
 | auth | permissions of the current user | string[] | true |
-| noAuthElement | the element that is displayed when has no permissions | (router: AuthRouterObject) => ReactNode | false |
+| noAuthElement | the element that is displayed when has no permissions | (router: AuthRouteObject) => ReactNode | false |
 | render | custom render page | (element: ReactElement \| null) => ReactElement \| null | false |
-| routers | all routers | AuthRouterObject[] | true |
-
-**createAuthRoutesFromChildren** (children: ReactNode) => AuthRouterObject[]
-
-create routers from jsx style routers
-
-**useAuthMenus** \<T extends AuthRouterObject>(menuRouters: T[]) => T[]
-
-get the menu with permissions
+| routers | all routers | AuthRouteObject[] | true |

@@ -12,6 +12,8 @@ export interface AuthIndexRouteObject extends IndexRouteObject {
 export interface AuthNonIndexRouteObject extends NonIndexRouteObject {
   auth?: string | string[];
   children?: AuthRouteObject[];
+  genRoutersProp?: boolean;
+  genAuthRoutersProp?: boolean;
 }
 
 export type AuthRouteObject = AuthIndexRouteObject | AuthNonIndexRouteObject;
@@ -80,12 +82,18 @@ export const getAuthRouters = ({
           ..._router,
           element: noAuthElement ? noAuthElement(router) : router.element,
         };
-      } else if (React.isValidElement(router.element) && router.children) {
+      } else if (
+        React.isValidElement(router.element) &&
+        router.children &&
+        (router.genRoutersProp || router.genAuthRoutersProp)
+      ) {
         _router = {
           ...router,
           element: React.cloneElement(router.element, {
-            routers: router.children,
-            authRouters: getMenus(router.children),
+            ...(router.genRoutersProp ? { routers: router.children } : {}),
+            ...(router.genAuthRoutersProp
+              ? { authRouters: getMenus(router.children) }
+              : {}),
             ...router.element.props,
           }),
         };
