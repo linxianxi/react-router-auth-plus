@@ -25,7 +25,7 @@ jobs:
         run: npm run build
 
       - name: Release
-        use: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
