@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import { FC } from "react";
 
 const NotAuth: FC = () => {
   return <div>NotAuth</div>;

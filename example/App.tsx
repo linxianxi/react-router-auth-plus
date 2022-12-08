@@ -12,17 +12,19 @@ const fetcher = async (url: string): Promise<string[]> =>
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(["admin"]);
-    }, 2000);
+    }, 1000);
   });
 
 function App() {
-  // use swr, react-query or others
-  const { data: auth } = useSWR("/api/user", fetcher);
+  const { data: auth, isValidating } = useSWR("/api/user", fetcher, {
+    // close fetch on window focus
+    revalidateOnFocus: false,
+  });
 
   const _routers = getAuthRouters({
     routers,
     noAuthElement: (router) => <NotAuth />,
-    render: (element) => (auth ? element : <Loading />),
+    render: (element) => (isValidating ? <Loading /> : element),
     auth: auth || [],
   });
 

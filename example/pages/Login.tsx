@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import React, { FC, useState } from "react";
+import { FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login: FC = () => {

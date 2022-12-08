@@ -73,7 +73,9 @@ export const routers: AuthRouteObject[] = [
 ];
 ```
 
-**In App.tsx**
+In react-router-dom 6.4+, you can choose two ways to render routers
+
+1、you can use RouterProvider and createBrowserRouter
 
 ```jsx
 // App.tsx
@@ -89,17 +91,19 @@ const fetcher = async (url: string): Promise<string[]> =>
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(["admin"]);
-    }, 2000);
+    }, 1000);
   });
 
 function App() {
-  // use swr, react-query or others
-  const { data: auth } = useSWR("/api/user", fetcher);
+  const { data: auth, isValidating } = useSWR("/api/user", fetcher, {
+    // close fetch on window focus
+    revalidateOnFocus: false,
+  });
 
   const _routers = getAuthRouters({
     routers,
     noAuthElement: (router) => <NotAuth />,
-    render: (element) => (auth ? element : <Loading />),
+    render: (element) => (isValidating ? <Loading /> : element),
     auth: auth || [],
   });
 
@@ -117,26 +121,134 @@ function App() {
 export default App;
 ```
 
+2、you can use BrowserRouter to wrapper `<App />`
+
+```jsx
+import NotAuth from "./pages/403";
+import Loading from "./components/Loading";
+import { getAuthRouters } from "react-router-auth-plus";
+import useSWR from "swr";
+import { useRoutes } from "react-router-dom";
+import { routers } from "./routers";
+
+const fetcher = async (url: string): Promise<string[]> =>
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(["admin"]);
+    }, 1000);
+  });
+
+function App() {
+  const { data: auth, isValidating } = useSWR("/api/user", fetcher, {
+    // close fetch on window focus
+    revalidateOnFocus: false,
+  });
+
+  return useRoutes(
+    getAuthRouters({
+      routers,
+      noAuthElement: (router) => <NotAuth />,
+      render: (element) => (isValidating ? <Loading /> : element),
+      auth: auth || [],
+    })
+  );
+}
+
+export default App;
+```
+
+```jsx
+// main.tsx(vite) or index.tsx(create-react-app)
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
+```
+
 **Dynamic Menus**
 
 If you set `genRoutersProp` and `genAuthRoutersProp` in router config, `react-router-auth-plus` automatically passes `routers` and `authRouters` to props.
 
 ```jsx
+// Layout.tsx
+import { FC } from "react";
 import { AuthRouteObject } from "react-router-auth-plus";
 
 interface LayoutProps {
-  // default routers
+  // children routers (if you set genRoutersProp)
   routers?: AuthRouteObject[];
-  // menu routers
+  // children auth routers (if you set genAuthRoutersProp)
   authRouters?: AuthRouteObject[];
 }
 
 const Layout:FC<LayoutProps> = ({ routers, authRouters }) => {
-   // you can use authRouters to generate your menus
+   // you can use this to generate your menus
    console.log("menuRouters", authRouters);
-
-   ...
+   return ...
 }
+```
+
+If you want to config menu name and icon in the routes
+
+```
+// routers.tsx
+export type MetaAuthRouteObject = AuthRouteObject & {
+  name?: string;
+  icon?: React.ReactNode;
+  children?: MetaAuthRouteObject[];
+};
+
+export const routers: MetaAuthRouteObject[] = [
+  {
+    path: "/",
+    element: <Layout />,
+    genAuthRoutersProp: true,
+    children: [
+      {
+        element: <Home />,
+        auth: ["admin"],
+        index: true,
+        name: "home",
+        icon: <HomeOutlined />,
+      },
+      {
+        path: "/setting",
+        element: <Setting />,
+      },
+      {
+        path: "/application",
+        element: <Application />,
+        auth: ["application"],
+      },
+    ],
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  { path: "*", element: <NotFound /> },
+];
+```
+
+```jsx
+// Layout.tsx
+import { FC } from "react";
+import { Outlet } from "react-router-dom";
+import { MetaAuthRouteObject } from "../routers";
+
+interface LayoutProps {
+  authRouters?: MetaAuthRouteObject[];
+}
+
+const Layout: FC<LayoutProps> = ({ routers, authRouters }) => {
+  // you can get name and icon
+  console.log("menuRouters", authRouters);
+  return ...;
+};
+
+export default Layout;
+
 ```
 
 ## API
