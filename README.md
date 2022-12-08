@@ -191,12 +191,12 @@ const Layout:FC<LayoutProps> = ({ routers, authRouters }) => {
 
 If you want to config menu name and icon in the routes
 
-```
+```jsx
 // routers.tsx
 export type MetaAuthRouteObject = AuthRouteObject & {
-  name?: string;
-  icon?: React.ReactNode;
-  children?: MetaAuthRouteObject[];
+  name?: string,
+  icon?: React.ReactNode,
+  children?: MetaAuthRouteObject[],
 };
 
 export const routers: MetaAuthRouteObject[] = [
