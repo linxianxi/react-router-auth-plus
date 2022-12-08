@@ -182,9 +182,9 @@ interface LayoutProps {
   authRouters?: AuthRouteObject[];
 }
 
-const Layout:FC<LayoutProps> = ({ routers, authRouters }) => {
+const Layout:FC<LayoutProps> = ({ routers = [], authRouters = [] }) => {
    // you can use this to generate your menus
-   console.log("menuRouters", authRouters);
+   console.log("authRouters", authRouters);
    return ...
 }
 ```
@@ -193,13 +193,14 @@ If you want to config menu name and icon in the routes
 
 ```jsx
 // routers.tsx
-export type MetaAuthRouteObject = AuthRouteObject & {
+type MetaMenu = {
   name?: string,
   icon?: React.ReactNode,
-  children?: MetaAuthRouteObject[],
 };
 
-export const routers: MetaAuthRouteObject[] = [
+export type MetaMenuAuthRouteObject = AuthRouteObject<MetaMenu>;
+
+export const routers: MetaMenuAuthRouteObject[] = [
   {
     path: "/",
     element: <Layout />,
@@ -235,15 +236,15 @@ export const routers: MetaAuthRouteObject[] = [
 // Layout.tsx
 import { FC } from "react";
 import { Outlet } from "react-router-dom";
-import { MetaAuthRouteObject } from "../routers";
+import { MetaMenuAuthRouteObject } from "../routers";
 
 interface LayoutProps {
-  authRouters?: MetaAuthRouteObject[];
+  authRouters?: MetaMenuAuthRouteObject[];
 }
 
-const Layout: FC<LayoutProps> = ({ routers, authRouters }) => {
+const Layout: FC<LayoutProps> = ({ authRouters = [] }) => {
   // you can get name and icon
-  console.log("menuRouters", authRouters);
+  console.log("authRouters", authRouters);
   return ...;
 };
 

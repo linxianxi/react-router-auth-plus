@@ -5,18 +5,28 @@ import {
   Outlet,
 } from "react-router-dom";
 
-export interface AuthIndexRouteObject extends IndexRouteObject {
-  auth?: string | string[];
-}
+export type AuthIndexRouteObject<T extends Record<string, any> = any> =
+  IndexRouteObject & {
+    auth?: string | string[];
+  } & {
+    [P in keyof T]: T[P];
+  };
 
-export interface AuthNonIndexRouteObject extends NonIndexRouteObject {
+export type AuthNonIndexRouteObject<T extends Record<string, any> = any> = Omit<
+  NonIndexRouteObject,
+  "children"
+> & {
+  [P in keyof T]: T[P];
+} & {
   auth?: string | string[];
-  children?: AuthRouteObject[];
+  children?: AuthRouteObject<T>[];
   genRoutersProp?: boolean;
   genAuthRoutersProp?: boolean;
-}
+};
 
-export type AuthRouteObject = AuthIndexRouteObject | AuthNonIndexRouteObject;
+export type AuthRouteObject<T extends Record<string, any> = any> =
+  | AuthIndexRouteObject<T>
+  | AuthNonIndexRouteObject<T>;
 
 export interface getAuthRoutersOptions {
   routers: AuthRouteObject[];

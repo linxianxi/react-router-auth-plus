@@ -9,13 +9,14 @@ const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/404"));
 const Setting = lazy(() => import("./pages/Setting"));
 
-export type MetaAuthRouteObject = AuthRouteObject & {
+type MetaMenu = {
   name?: string;
   icon?: React.ReactNode;
-  children?: MetaAuthRouteObject[];
 };
 
-export const routers: MetaAuthRouteObject[] = [
+export type MetaMenuAuthRouteObject = AuthRouteObject<MetaMenu>;
+
+export const routers: MetaMenuAuthRouteObject[] = [
   {
     path: "/",
     element: <Layout />,

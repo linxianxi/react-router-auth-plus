@@ -1,16 +1,16 @@
 import { FC } from "react";
 import { Outlet } from "react-router-dom";
-import { MetaAuthRouteObject } from "../routers";
+import { MetaMenuAuthRouteObject } from "../routers";
 
 interface LayoutProps {
   // default routers
-  routers?: MetaAuthRouteObject[];
+  routers?: MetaMenuAuthRouteObject[];
   // menu routers
-  authRouters?: MetaAuthRouteObject[];
+  authRouters?: MetaMenuAuthRouteObject[];
 }
 
-const Layout: FC<LayoutProps> = ({ routers, authRouters }) => {
-  console.log("menuRouters", authRouters);
+const Layout: FC<LayoutProps> = ({ routers = [], authRouters = [] }) => {
+  console.log("authRouters", authRouters);
   return (
     <div>
       in layout
