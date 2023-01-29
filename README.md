@@ -85,7 +85,11 @@ import { getAuthRouters } from "react-router-auth-plus";
 import useSWR from "swr";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { routers } from "./routers";
-import { Suspense } from "react";
+import { Router } from "@remix-run/router";
+import { Suspense, useMemo } from "react";
+
+// if you want to use router navigate outside react component
+export let router: Router;
 
 const fetcher = async (url: string): Promise<string[]> =>
   await new Promise((resolve) => {
@@ -100,12 +104,18 @@ function App() {
     revalidateOnFocus: false,
   });
 
-  const _routers = getAuthRouters({
-    routers,
-    noAuthElement: (router) => <NotAuth />,
-    render: (element) => (isValidating ? <Loading /> : element),
-    auth: auth || [],
-  });
+  const _routers = useMemo(() => {
+    const result = getAuthRouters({
+      routers,
+      noAuthElement: (router) => <NotAuth />,
+      render: (element) => (isValidating ? <Loading /> : element),
+      auth: auth || [],
+    });
+
+    router = result;
+
+    return result;
+  }, [auth]);
 
   return (
     <Suspense fallback={<Loading />}>
