@@ -131,7 +131,7 @@ function App() {
 export default App;
 ```
 
-2、you can use BrowserRouter to wrapper `<App />`
+2、you can use BrowserRouter
 
 ```jsx
 import NotAuth from "./pages/403";
